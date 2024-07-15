@@ -67,6 +67,20 @@ void simulateRace(Horse horses[], int positions[]) {
             }
         }
     }
+
+    for (int i = 0; i < NUM_HORSES - 1; i++) {      // bubble sort to sort positions
+        for (int j = 0; j < NUM_HORSES - i - 1; j++) {
+            if (positions[j] < positions[j + 1]) {
+                int temp = positions[j];
+                positions[j] = positions[j + 1];
+                positions[j + 1] = temp;
+
+                Horse tempHorse = horses[j];
+                horses[j] = horses[j + 1];
+                horses[j + 1] = tempHorse;
+            }
+        }
+    }
 }
 
 void displayResults(Horse horses[], int positions[]) {
@@ -107,9 +121,9 @@ void startBetting(const Horse horses[], const int odds[], int positions[]) {
     if (betType == 1) {
         winBet(horses, odds, positions, &chosenHorse, &betAmount);
     } else if (betType == 2) {
-        showBet(horses, odds, positions, &chosenHorse, &betAmount);
-    } else if (betType == 3) {
         placeBet(horses, odds, positions, &chosenHorse, &betAmount);
+    } else if (betType == 3) {
+        showBet(horses, odds, positions, &chosenHorse, &betAmount);
     } else {
         printf("Error: Invalid bet type.\n");
     }
@@ -124,30 +138,77 @@ void winBet(const Horse horses[], const int odds[], const int positions[], int* 
 
     // Validates chosenHorse
     while (*chosenHorse < 1 || *chosenHorse > NUM_HORSES) {
-        
+        printf("Invalid horse number. Please enter a number between 1 and %d: ", NUM_HORSES);
+        scanf("%d", chosenHorse);
     }
 
     printf("And how much would you like to bet (limit $10,000): ");
     scanf("%d", betAmount); // gets the amount the user wants to be
     printf("Good luck!\n");
 
-
-    // Use dereferenced values in the calculation
-    if (positions[*chosenHorse - 1] >= 100) {   // dereferences chosenHorse point to get the horse the user chose
-        int winnings = (*betAmount) * odds[*chosenHorse - 1];   // calculates the winnings
-        displayResults(horses, positions); 
-        printf("\n");
-        printf("Congratulations! You won $%d\n", winnings);
+    // Check if the chosen horse won (index 0 in the sorted positions array)
+    if (*chosenHorse - 1 == 0) {
+        int winnings = (*betAmount) * odds[*chosenHorse - 1];
+        displayResults(horses, positions);
+        printf("\nCongratulations! You won $%d\n", winnings);
     } else {
         displayResults(horses, positions);
-        printf("\n");
-        printf("Sorry, your horse didn't win.\n");
+        printf("\nSorry, your horse didn't win.\n");
     }
 }
 
-void showBet(const Horse horses[], const int odds[], const int positions[], int* chosenHorse, int* betAmount){}
+void showBet(const Horse horses[], const int odds[], const int positions[], int* chosenHorse, int* betAmount) {
+    printf("Playing it safe, here are the odds for today\n");
+    displayOdds(horses, odds);
 
-void placeBet(const Horse horses[], const int odds[], const int positions[], int* chosenHorse, int* betAmount){}
+    printf("Which horse would you like to bet on? (Enter a number 1-%d): ", NUM_HORSES);
+    scanf("%d", chosenHorse);
+
+    // Validate chosenHorse
+    while (*chosenHorse < 1 || *chosenHorse > NUM_HORSES) {
+        printf("Invalid horse number. Please enter a number between 1 and %d: ", NUM_HORSES);
+        scanf("%d", chosenHorse);
+    }
+
+    printf("And how much would you like to bet (limit $10,000): ");
+    scanf("%d", betAmount);
+
+    // Check if the chosen horse won (index 0 in the sorted positions array)
+    if (*chosenHorse - 1 == 0 || *chosenHorse - 1 == 1 || *chosenHorse - 1 == 2) {
+        int winnings = (*betAmount) * odds[*chosenHorse - 1];
+        displayResults(horses, positions);
+        printf("\nCongratulations! You won $%d\n", winnings);
+    } else {
+        displayResults(horses, positions);
+        printf("\nSorry, your horse didn't win.\n");
+    }
+}
+
+void placeBet(const Horse horses[], const int odds[], const int positions[], int* chosenHorse, int* betAmount) {
+    printf("A place bet, eh? Here are the odds for today\n");
+    displayOdds(horses, odds);
+    
+    printf("Which horse would you like to bet on? (Enter a number 1-%d): ", NUM_HORSES);
+    scanf("%d", chosenHorse);
+
+    // Validate chosenHorse
+    while (*chosenHorse < 1 || *chosenHorse > NUM_HORSES) {
+        printf("Invalid horse number. Please enter a number between 1 and %d: ", NUM_HORSES);
+        scanf("%d", chosenHorse);
+    }
+
+    printf("And how much would you like to bet (limit $10,000): ");
+    scanf("%d", betAmount);
+
+    if (*chosenHorse - 1 == 0 || *chosenHorse - 1 == 1) {
+        int winnings = (*betAmount) * odds[*chosenHorse - 1];
+        displayResults(horses, positions);
+        printf("\nCongratulations! You won $%d\n", winnings);
+    } else {
+        displayResults(horses, positions);
+        printf("\nSorry, your horse didn't win.\n");
+    }
+}
 
 void displayOdds(const Horse horses[], int odds[]) {
     srand(time(NULL)); // Initialize random number generator again for odds
@@ -157,7 +218,7 @@ void displayOdds(const Horse horses[], int odds[]) {
 
     printf("\nOdds for Today's Race:\n");
     for (int i = 0; i < NUM_HORSES; i++) {
-        printf("%s. %s: %d:1\n", i, horses[i].name, odds[i]);
+        printf("%d. %s: %d:1\n", i + 1, horses[i].name, odds[i]); 
     }
 
     printf("\n");
