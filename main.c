@@ -33,62 +33,50 @@ void displayOdds(const Horse horses[], int odds[]); // Updated prototype
 
 int main() {
     printf("Welcome to the Horse Racing Simulation!\n");
-    int isBetting;
+    int isBetting;      // stores user's decision to bet
     printf("Would you like to bet today? (1 for yes, 0 for no)\n");
-    scanf("%d", &isBetting);
+    scanf("%d", &isBetting);    // get user input for if they want to bet
     
 
-    int positions[NUM_HORSES] = {0};
-    int odds[NUM_HORSES];
+    int positions[NUM_HORSES] = {0};    // declares and initializes an array of horse positions to 0
+    int odds[NUM_HORSES];           // declares an array odds to store the odds for each horse
     
-    simulateRace(horses, positions);
+    simulateRace(horses, positions);    // simulates the race and updates the positions array
     
-    if (isBetting) {
-        srand(time(NULL)); 
+    if (isBetting) {        // if the user is betting
+        srand(time(NULL));  // gets a random time as a seed for rng
         printf("\n");
-        startBetting(horses, odds, positions);
+        startBetting(horses, odds, positions);  // starts the betting process
+    } else {
+        displayResults(horses, positions);  // displays the results
     }
-
-    
-    displayResults(horses, positions);
-
-    printf("The race is over!\n\n");
     return 0;
 }
 
 void simulateRace(Horse horses[], int positions[]) {
-    int raceFinished = 0;
+    int raceFinished = 0;   // flag to indicate if race is over
     srand(time(NULL)); // Initialize random number generator
 
-    while (!raceFinished) {
-        for (int j = 0; j < NUM_HORSES; j++) {
-            positions[j] += horses[j].speed + (rand() % 3) - 1;
+    while (!raceFinished) { // while the race isn't over (flag == 0)
+        for (int j = 0; j < NUM_HORSES; j++) {  // iterates through the horses
+            positions[j] += horses[j].speed + (rand() % 3) - 1; // random speed boost or decerease to update position
 
-            if (positions[j] >= 100) {
+            if (positions[j] >= 100) {  // first horse to cross 100 wins
                 raceFinished = 1;
                 break; 
             }
         }
-
-        // // Print positions for debugging
-        // for (int j = 0; j < NUM_HORSES; j++) {
-        //     printf("%s: %d\t", horses[j].name, positions[j]);
-        // }
-        // printf("\n");
     }
 }
 
 void displayResults(Horse horses[], int positions[]) {
-    // Sort positions array in descending order
-    for (int i = 0; i < NUM_HORSES - 1; i++) {
+    for (int i = 0; i < NUM_HORSES - 1; i++) {      // bubble sort to sort positions
         for (int j = 0; j < NUM_HORSES - i - 1; j++) {
             if (positions[j] < positions[j + 1]) {
-                // Swap positions[j] and positions[j+1]
                 int temp = positions[j];
                 positions[j] = positions[j + 1];
                 positions[j + 1] = temp;
 
-                // Swap horses[j] and horses[j+1] to maintain the correct order
                 Horse tempHorse = horses[j];
                 horses[j] = horses[j + 1];
                 horses[j + 1] = tempHorse;
@@ -100,21 +88,21 @@ void displayResults(Horse horses[], int positions[]) {
     printf("\nRace Results:\n");
     for (int i = 0; i < NUM_HORSES; i++) {
         if (i == 0) {
-            printf("Winner: %s: %d\n", horses[i].name, positions[i]);
+            printf("Winner: %s: %d\n", horses[i].name, positions[i]); // prints 1st place
         } else if (i == 1) {
-            printf("Place: %s: %d\n", horses[i].name, positions[i]);
+            printf("Place: %s: %d\n", horses[i].name, positions[i]);    // prints 2nt place
         } else if (i == 2) {
-            printf("Show: %s: %d\n", horses[i].name, positions[i]);
+            printf("Show: %s: %d\n", horses[i].name, positions[i]); // prints 3st place
         } else {
-            printf("%d. %s: %d\n", i + 1, horses[i].name, positions[i]);
+            printf("%d. %s: %d\n", i + 1, horses[i].name, positions[i]); // prints the rest
         }
     }
 }
 
-void startBetting(const Horse horses[], const int odds[], int positions[]) {
-    int betType, chosenHorse, betAmount;
+void startBetting(const Horse horses[], const int odds[], int positions[]) {    
+    int betType, chosenHorse, betAmount;    // stores the type of bet, horse user chose, and bet amount
     printf("What type of bet would you like to make? (1: Win, 2: Place, 3: Show): ");
-    scanf("%d", &betType);
+    scanf("%d", &betType); // gets the type of bet
 
     if (betType == 1) {
         winBet(horses, odds, positions, &chosenHorse, &betAmount);
@@ -129,26 +117,30 @@ void startBetting(const Horse horses[], const int odds[], int positions[]) {
 
 void winBet(const Horse horses[], const int odds[], const int positions[], int* chosenHorse, int* betAmount) {
     printf("Well aren't you bold, here are the odds for today\n");
-    displayOdds(horses, odds);
+    displayOdds(horses, odds); // shows the odds for the user to choose from
 
     printf("Which horse would you like to bet on? (Enter a number 1-%d): ", NUM_HORSES);
-    scanf("%d", chosenHorse);
+    scanf("%d", chosenHorse); // stores the chosen horse
 
-    // Validate chosenHorse (same as before)
+    // Validates chosenHorse
     while (*chosenHorse < 1 || *chosenHorse > NUM_HORSES) {
-        // ... (error message and input prompt)
+        
     }
 
     printf("And how much would you like to bet (limit $10,000): ");
-    scanf("%d", betAmount);
+    scanf("%d", betAmount); // gets the amount the user wants to be
     printf("Good luck!\n");
 
 
     // Use dereferenced values in the calculation
-    if (positions[*chosenHorse - 1] >= 100) {
-        int winnings = (*betAmount) * odds[*chosenHorse - 1];
+    if (positions[*chosenHorse - 1] >= 100) {   // dereferences chosenHorse point to get the horse the user chose
+        int winnings = (*betAmount) * odds[*chosenHorse - 1];   // calculates the winnings
+        displayResults(horses, positions); 
+        printf("\n");
         printf("Congratulations! You won $%d\n", winnings);
     } else {
+        displayResults(horses, positions);
+        printf("\n");
         printf("Sorry, your horse didn't win.\n");
     }
 }
@@ -165,7 +157,7 @@ void displayOdds(const Horse horses[], int odds[]) {
 
     printf("\nOdds for Today's Race:\n");
     for (int i = 0; i < NUM_HORSES; i++) {
-        printf("%s: %d:1\n", horses[i].name, odds[i]);
+        printf("%s. %s: %d:1\n", i, horses[i].name, odds[i]);
     }
 
     printf("\n");
