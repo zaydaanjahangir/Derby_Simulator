@@ -4,20 +4,29 @@
 #include <time.h>  // seeds rng
 
 #define NUM_HORSES 6 // defines constant NUM_HORSES with a value of 6
+#define NUM_SIMULATIONS 1000
 
-typedef struct {    // New data type called horse
-    char name[15];  // A char array/string to store a horses name
-    int speed;      // an integer to store the horses speed
+
+typedef struct {
+    char name[15];
+    int skill; // Skill level (1-10, for example)
+} Jockey;
+
+
+typedef struct {
+    char name[15];  
+    int speed;
+    int stamina;
+    Jockey jockey; // Add the Jockey structure member
 } Horse;
 
-
-Horse horses[NUM_HORSES] = {    // creates an array that can hold 4 horses
-    {"Thunderbolt", 8},
-    {"Whirlwind", 8},
-    {"Eclipse", 8},
-    {"Comet", 8},
-    {"Volcano", 8},
-    {"Monsoon", 8}
+Horse horses[NUM_HORSES] = {   
+    {"Thunderbolt", 8, 10, {"Johnny J.", 7}}, // 26
+    {"Whirlwind", 8, 10, {"Mickey P.", 7}},   // 28
+    {"Eclipse", 8, 10, {"Laura H.", 7}},       // 24
+    {"Comet", 8, 10, {"John S.", 7}},         // 23
+    {"Volcano", 8, 10, {"Hiton H.", 7}},       // 22
+    {"Monsoon", 8, 10, {"Mike M.", 7}}        // 26
 };
 
 
@@ -29,7 +38,13 @@ void winBet(const Horse horses[], const int odds[], const int positions[], int* 
 void showBet(const Horse horses[], const int odds[], const int positions[], int* chosenHorse, int* betAmount);
 void placeBet(const Horse horses[], const int odds[], const int positions[], int* chosenHorse, int* betAmount);
 void displayOdds(const Horse horses[], int odds[]); // Updated prototype
+void resetPositions(int positions[]);
 
+void resetPositions(int positions[]) {
+    for (int i = 0; i < NUM_HORSES; i++) {
+        positions[i] = 0;
+    }
+}
 
 int main() {
     printf("Welcome to the Horse Racing Simulation!\n");
@@ -37,10 +52,37 @@ int main() {
     printf("Would you like to bet today? (1 for yes, 0 for no)\n");
     scanf("%d", &isBetting);    // get user input for if they want to bet
     
-
     int positions[NUM_HORSES] = {0};    // declares and initializes an array of horse positions to 0
     int odds[NUM_HORSES];           // declares an array odds to store the odds for each horse
-    
+
+    if(isBetting == 3){
+        int winCounts[NUM_HORSES] = {0};      // Array to count wins for each horse
+        int placeCounts[NUM_HORSES] = {0};   // Array to count place finishes
+        int showCounts[NUM_HORSES] = {0};    // Array to count show finishes
+
+        srand(time(NULL)); // Initialize random number generator
+
+         for (int sim = 0; sim < NUM_SIMULATIONS; sim++) {
+            resetPositions(positions);   // Reset positions before each simulation
+            for (int i = 0; i < NUM_HORSES; i++) {
+                horses[i].stamina = 10; // reset stamina before each simulation
+            }
+            srand(time(NULL)); // Initialize random number generator
+            
+            
+        }
+
+        // Calculate probabilities for each horse
+        printf("\nProbabilities (over %d simulations):\n", NUM_SIMULATIONS);
+        for (int i = 0; i < NUM_HORSES; i++) {
+            printf("%s:\n", horses[i].name);
+            printf("  Win: %.2f%%\n", (winCounts[i] * 100.0) / NUM_SIMULATIONS);
+            printf("  Place: %.2f%%\n", (placeCounts[i] * 100.0) / NUM_SIMULATIONS);
+            printf("  Show: %.2f%%\n", (showCounts[i] * 100.0) / NUM_SIMULATIONS);
+        }
+        return 0;
+    }
+
     simulateRace(horses, positions);    // simulates the race and updates the positions array
     
     if (isBetting) {        // if the user is betting
@@ -58,23 +100,40 @@ void simulateRace(Horse horses[], int positions[]) {
     srand(time(NULL)); // Initialize random number generator
 
     while (!raceFinished) { // while the race isn't over (flag == 0)
-        for (int j = 0; j < NUM_HORSES; j++) {  // iterates through the horses
-            positions[j] += horses[j].speed + (rand() % 3) - 1; // random speed boost or decerease to update position
+        for (int j = 0; j < NUM_HORSES; j++) {
 
-            if (positions[j] >= 100) {  // first horse to cross 100 wins
+            if (horses[j].stamina > 0) {
+                positions[j] += horses[j].speed + (rand() % 3) - 1;
+
+                // Stamina Depletion based on Jockey Skill
+                int staminaReduction = 1 - (horses[j].jockey.skill / 20.0); // Skill 10 reduces depletion by 0.5
+
+                // Ensure at least 1 stamina is lost
+                if (staminaReduction < 1) {
+                    staminaReduction = 1;
+                }
+
+                horses[j].stamina -= staminaReduction; 
+            } else {
+                positions[j] += horses[j].speed / 2; // Slower if out of stamina
+            }
+            
+            if (positions[j] >= 100) {  // Check if a horse has finished
                 raceFinished = 1;
-                break; 
+                break;
             }
         }
     }
 
-    for (int i = 0; i < NUM_HORSES - 1; i++) {      // bubble sort to sort positions
+    for (int i = 0; i < NUM_HORSES - 1; i++) {
         for (int j = 0; j < NUM_HORSES - i - 1; j++) {
             if (positions[j] < positions[j + 1]) {
+                // Swap positions[j] and positions[j+1]
                 int temp = positions[j];
                 positions[j] = positions[j + 1];
                 positions[j + 1] = temp;
 
+                // Swap horses[j] and horses[j+1] to maintain the correct order
                 Horse tempHorse = horses[j];
                 horses[j] = horses[j + 1];
                 horses[j + 1] = tempHorse;
@@ -84,31 +143,17 @@ void simulateRace(Horse horses[], int positions[]) {
 }
 
 void displayResults(Horse horses[], int positions[]) {
-    for (int i = 0; i < NUM_HORSES - 1; i++) {      // bubble sort to sort positions
-        for (int j = 0; j < NUM_HORSES - i - 1; j++) {
-            if (positions[j] < positions[j + 1]) {
-                int temp = positions[j];
-                positions[j] = positions[j + 1];
-                positions[j + 1] = temp;
-
-                Horse tempHorse = horses[j];
-                horses[j] = horses[j + 1];
-                horses[j + 1] = tempHorse;
-            }
-        }
-    }
-
-    // Print the sorted results
+    // Print the sorted results (arrays are already sorted in simulateRace)
     printf("\nRace Results:\n");
     for (int i = 0; i < NUM_HORSES; i++) {
         if (i == 0) {
-            printf("Winner: %s: %d\n", horses[i].name, positions[i]); // prints 1st place
+            printf("Winner: %s: %d\n", horses[i].name, positions[i]); 
         } else if (i == 1) {
-            printf("Place: %s: %d\n", horses[i].name, positions[i]);    // prints 2nt place
+            printf("Place: %s: %d\n", horses[i].name, positions[i]);
         } else if (i == 2) {
-            printf("Show: %s: %d\n", horses[i].name, positions[i]); // prints 3st place
+            printf("Show: %s: %d\n", horses[i].name, positions[i]);
         } else {
-            printf("%d. %s: %d\n", i + 1, horses[i].name, positions[i]); // prints the rest
+            printf("%d. %s: %d\n", i + 1, horses[i].name, positions[i]);
         }
     }
 }
