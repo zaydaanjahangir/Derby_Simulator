@@ -31,7 +31,7 @@ Horse horses[NUM_HORSES] = {
 
 
 // Updated function prototypes
-void simulateRace(Horse horses[NUM_HORSES], int positions[]);
+void simulateRace(Horse horses[NUM_HORSES], int positions[], int horseIndices[]);
 void displayResults(Horse horses[NUM_HORSES], int positions[]);
 void startBetting(const Horse horses[], const int odds[], int positions[]);
 void winBet(const Horse horses[], const int odds[], const int positions[], int* chosenHorse, int* betAmount);
@@ -54,22 +54,28 @@ int main() {
     
     int positions[NUM_HORSES] = {0};    // declares and initializes an array of horse positions to 0
     int odds[NUM_HORSES];           // declares an array odds to store the odds for each horse
+    int winCounts[NUM_HORSES] = {0};      // Array to count wins for each horse
+    int placeCounts[NUM_HORSES] = {0};   // Array to count place finishes
+    int showCounts[NUM_HORSES] = {0};    // Array to count show finishes
+
+    int horseIndices[NUM_HORSES];
+    for (int i = 0; i < NUM_HORSES; i++) {
+        horseIndices[i] = i; 
+    }
 
     if(isBetting == 3){
-        int winCounts[NUM_HORSES] = {0};      // Array to count wins for each horse
-        int placeCounts[NUM_HORSES] = {0};   // Array to count place finishes
-        int showCounts[NUM_HORSES] = {0};    // Array to count show finishes
-
         srand(time(NULL)); // Initialize random number generator
-
-         for (int sim = 0; sim < NUM_SIMULATIONS; sim++) {
-            resetPositions(positions);   // Reset positions before each simulation
+        for (int sim = 0; sim < NUM_SIMULATIONS; sim++) {
+            resetPositions(positions);   
             for (int i = 0; i < NUM_HORSES; i++) {
-                horses[i].stamina = 10; // reset stamina before each simulation
+                horses[i].stamina = 10; 
             }
-            srand(time(NULL)); // Initialize random number generator
-            
-            
+            simulateRace(horses, positions, horseIndices);
+
+            // Correctly update the win, place, and show count for each horse based on sorted positions
+            winCounts[horseIndices[0]]++;
+            placeCounts[horseIndices[1]]++;
+            showCounts[horseIndices[2]]++;
         }
 
         // Calculate probabilities for each horse
@@ -83,7 +89,7 @@ int main() {
         return 0;
     }
 
-    simulateRace(horses, positions);    // simulates the race and updates the positions array
+    simulateRace(horses, positions, horseIndices);    // simulates the race and updates the positions array
     
     if (isBetting) {        // if the user is betting
         srand(time(NULL));  // gets a random time as a seed for rng
@@ -95,7 +101,7 @@ int main() {
     return 0;
 }
 
-void simulateRace(Horse horses[], int positions[]) {
+void simulateRace(Horse horses[], int positions[], int horseIndices[]) {
     int raceFinished = 0;   // flag to indicate if race is over
     srand(time(NULL)); // Initialize random number generator
 
@@ -137,6 +143,11 @@ void simulateRace(Horse horses[], int positions[]) {
                 Horse tempHorse = horses[j];
                 horses[j] = horses[j + 1];
                 horses[j + 1] = tempHorse;
+
+                // Swap horseIndices[j] and horseIndices[j + 1]
+                int tempIndex = horseIndices[j];
+                horseIndices[j] = horseIndices[j + 1];
+                horseIndices[j + 1] = tempIndex;
             }
         }
     }
