@@ -1,55 +1,83 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdlib.h> 
+#include <stdio.h> 
 #include <time.h>
-#include "horse.h"
 #include "race.h"
-#include "betting.h"
-#include "sequences.h"
+#include "horse.h"
 
-#define NUM_HORSES 6 
-#define NUM_SIMULATIONS 1000000
+#define NUM_HORSES 6
 
+void simulateRace(Horse horses[], int positions[], int horseIndices[]) {
+    int raceFinished = 0;   
+    srand(time(NULL)); 
+    TrackCondition trackCondition = rand() % 3; // Randomly pick 0 (DRY), 1 (WET), or 2 (MUDDY)
 
-Horse horses[NUM_HORSES] = {   
-    {"Thunderbolt", 8, 10, {"Johnny J.", 7}, 0, 1, 0}, // 26
-    {"Whirlwind", 8, 10, {"Mickey P.", 7}, -1, 0, 1},  // 28
-    {"Eclipse", 8, 10, {"Laura H.", 7}, -1, -1, 1},    // 24
-    {"Comet", 8, 10, {"John S.", 7}, 1, 0, -1},         // 23
-    {"Volcano", 8, 10, {"Hiton H.", 7}, 0, 0, 1},       // 22
-    {"Monsoon", 8, 10, {"Mike M.", 10}, 1, 1, -1}        // 26
-};
+    while (!raceFinished) { 
+        for (int j = 0; j < NUM_HORSES; j++) {
 
-int main() {
-    int isBetting;
-    int positions[NUM_HORSES] = {0};    
-    int odds[NUM_HORSES];           
-    int horseIndices[NUM_HORSES];
+            if (horses[j].stamina > 0) {
+                int speedModifier = horses[j].trackBias[trackCondition];
+                positions[j] += horses[j].speed + speedModifier + (rand() % 3) - 1;
+
+                // Stamina Depletion based on Jockey Skill
+                int staminaReduction = 1 - (horses[j].jockey.skill / 20.0); // Skill 10 reduces depletion by 0.5
+
+                // Ensure at least 1 stamina is lost
+                if (staminaReduction < 1) {
+                    staminaReduction = 1;
+                }
+
+                horses[j].stamina -= staminaReduction; 
+            } else {
+                positions[j] += horses[j].speed / 2; // Slower if out of stamina
+            }
+            
+            if (positions[j] >= 100) {  // Check if a horse has finished
+                raceFinished = 1;
+                break;
+            }
+        }
+    }
+
+    for (int i = 0; i < NUM_HORSES - 1; i++) {
+        for (int j = 0; j < NUM_HORSES - i - 1; j++) {
+            if (positions[j] < positions[j + 1]) {
+                // Swap positions[j] and positions[j+1]
+                int temp = positions[j];
+                positions[j] = positions[j + 1];
+                positions[j + 1] = temp;
+
+                // Swap horses[j] and horses[j+1] to maintain the correct order
+                Horse tempHorse = horses[j];
+                horses[j] = horses[j + 1];
+                horses[j + 1] = tempHorse;
+
+                // Swap horseIndices[j] and horseIndices[j + 1]
+                int tempIndex = horseIndices[j];
+                horseIndices[j] = horseIndices[j + 1];
+                horseIndices[j + 1] = tempIndex;
+            }
+        }
+    }
+}
+
+void displayResults(const Horse horses[], const int positions[]) {
+    // Print the sorted results (arrays are already sorted in simulateRace)
+    printf("\nRace Results:\n");
     for (int i = 0; i < NUM_HORSES; i++) {
-        horseIndices[i] = i; 
+        if (i == 0) {
+            printf("Winner: %s: %d\n", horses[i].name, positions[i]); 
+        } else if (i == 1) {
+            printf("Place: %s: %d\n", horses[i].name, positions[i]);
+        } else if (i == 2) {
+            printf("Show: %s: %d\n", horses[i].name, positions[i]);
+        } else {
+            printf("%d. %s: %d\n", i + 1, horses[i].name, positions[i]);
+        }
     }
+}
 
-    startSequence(&isBetting);
-    if(isBetting == 3){
-        simulationSequence(positions, horseIndices, horses);
-        return 0;
+void resetPositions(int positions[]) {
+    for (int i = 0; i < NUM_HORSES; i++) {
+        positions[i] = 0;
     }
-    simulateRace(horses, positions, horseIndices);    
-    
-    if (isBetting) {        
-        srand(time(NULL));  
-        printf("\n");
-        TrackCondition trackCondition = rand() % 3;
-        calculateOdds(horses, odds, positions, trackCondition); 
-
-        // for loop helps debug the dynamic odds calculation
-
-        // for (int i = 0; i < NUM_HORSES; i++) {              
-        //     printf("%d. %s: %d:1\n", i + 1, horses[i].name, odds[i]);
-        // }
-        // return 0;
-
-        startBetting(horses, odds, positions);  
-    } else {displayResults(horses, positions);}
-   
-    return 0;
 }
