@@ -104,15 +104,23 @@ void placeBet(const Horse horses[], int odds[], const int positions[], int* chos
 }
 
 void displayOdds(const Horse horses[], int odds[]) {
-    srand(time(NULL)); // Initialize random number generator again for odds
-    for (int i = 0; i < NUM_HORSES; i++) {
-        odds[i] = rand() % 10 + 1; // Random odds between 1 and 10
-    }
-
     printf("\nOdds for Today's Race:\n");
     for (int i = 0; i < NUM_HORSES; i++) {
         printf("%d. %s: %d:1\n", i + 1, horses[i].name, odds[i]); 
     }
 
     printf("\n");
+}
+
+void calculateOdds(const Horse horses[], int odds[], int positions[], TrackCondition trackCondition) {
+    for (int i = 0; i < NUM_HORSES; i++) {
+        int baseOdds = 10; 
+        //    Track Condition Bias
+        baseOdds -= (horses[i].trackBias[trackCondition]) * 5; 
+        // // Ensure odds are at least 1:1
+        if (baseOdds < 1) {
+            baseOdds = 1;
+        }
+        odds[i] = baseOdds; // Store calculated odds
+    }
 }
