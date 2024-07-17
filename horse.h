@@ -3,7 +3,7 @@
 
 typedef struct {
     char name[15];
-    int skill; // Skill level (1-10, for example)
+    int skill; 
 } Jockey;
 
 
@@ -11,7 +11,8 @@ typedef struct {
     char name[15];  
     int speed;
     int stamina;
-    Jockey jockey; // Add the Jockey structure member
+    Jockey jockey; 
+    int trackBias[3]; 
 } Horse;
 
 #endif
