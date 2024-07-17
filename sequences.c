@@ -6,7 +6,7 @@
 #include "race.h"
 
 #define NUM_HORSES 6
-#define NUM_SIMULATIONS 1000
+#define NUM_SIMULATIONS 1000000
 
 
 void startSequence(int* isBetting){
@@ -36,9 +36,9 @@ void simulationSequence(int positions[], int horseIndices[], Horse horses[]){
         printf("\nProbabilities (over %d simulations):\n", NUM_SIMULATIONS);
         for (int i = 0; i < NUM_HORSES; i++) {
             printf("%s:\n", horses[i].name);
-            printf("  Win: %.2f%%\n", (winCounts[i] * 100.0) / NUM_SIMULATIONS);
-            printf("  Place: %.2f%%\n", (placeCounts[i] * 100.0) / NUM_SIMULATIONS);
-            printf("  Show: %.2f%%\n", (showCounts[i] * 100.0) / NUM_SIMULATIONS);
+            printf("  Win: %.3f%%\n", (winCounts[horseIndices[i]] * 100.0) / NUM_SIMULATIONS);
+            printf("  Place: %.3f%%\n", (placeCounts[horseIndices[i]] * 100.0) / NUM_SIMULATIONS);
+            printf("  Show: %.3f%%\n", (showCounts[horseIndices[i]] * 100.0) / NUM_SIMULATIONS);
         }
 }
 
